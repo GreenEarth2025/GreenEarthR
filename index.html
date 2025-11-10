@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mopuri ATS Resume Builder Pro</title>
-    <meta name="description" content="Professional ATS-optimized resume builder with job description targeting. Paste resume + job description. Get 3+ page ATS-perfect resume.">
+    <meta name="description" content="Professional ATS-optimized resume builder. Paste resume + job description. Get 3+ page ATS-perfect resume — no name/contact header.">
     
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -133,11 +133,6 @@
             color: var(--text);
         }
 
-        button.danger {
-            background: var(--error);
-            color: white;
-        }
-
         select {
             background: #111;
             color: var(--text);
@@ -150,7 +145,7 @@
             font-family: inherit;
         }
 
-        /* FIXED: Resume Title Font Size */
+        /* CLEAN RESUME — NO HEADER */
         .format-resume {
             background: white;
             color: black;
@@ -163,23 +158,6 @@
             line-height: 1.6;
             font-size: 11.5pt;
             border: 1px solid #ddd;
-        }
-
-        .format-resume .name-title {
-            font-size: 18pt;
-            margin-bottom: 8pt;
-            color: #1a1a1a;
-            font-weight: bold;
-            text-align: center;
-            letter-spacing: 0.5pt;
-            text-transform: uppercase;
-        }
-
-        .format-resume .contact {
-            text-align: center;
-            color: #555;
-            font-size: 11pt;
-            margin-bottom: 20pt;
         }
 
         .format-resume h2 {
@@ -279,7 +257,6 @@
             h1 { font-size: 2.2rem; }
             .flex { flex-direction: column; }
             .format-resume { padding: 25px; font-size: 10.5pt; }
-            .format-resume .name-title { font-size: 16pt; }
         }
     </style>
 </head>
@@ -287,13 +264,13 @@
     <div class="container">
         <header>
             <h1>Mopuri ATS Resume Builder Pro</h1>
-            <p class="subtitle">Paste your resume + job description. Get a 3+ page ATS-perfect resume.</p>
+            <p class="subtitle">Paste resume + job description. Get 3+ page ATS-perfect resume — no name/contact header.</p>
         </header>
 
         <!-- Paste Resume -->
         <div class="section">
             <h2>Paste Your Resume</h2>
-            <textarea id="resumeText" placeholder="Paste your full resume here (name, contact, experience, skills, etc.)..."></textarea>
+            <textarea id="resumeText" placeholder="Paste your full resume here (summary, experience, skills, etc.)..."></textarea>
         </div>
 
         <!-- Paste Job Description -->
@@ -359,12 +336,9 @@
     </div>
 
     <script>
-        // FIXED: Syntax error in object key
         let resumeData = {
             raw: '',
             cleaned: '',
-            name: '',
-            contact: '',
             summary: '',
             experience: [],
             skills: [],
@@ -396,14 +370,13 @@
             document.getElementById('analysisSection').classList.remove('hidden');
             document.getElementById('formatSelect').value = '0';
             generateResume();
-            showToast('Resume optimized for job! 3+ pages generated.', 'success');
+            showToast('Resume optimized! 3+ pages generated.', 'success');
         }
 
         function cleanResumeText(text) {
             return text
                 .replace(/[^\w\s,.;:!?()'-]/g, ' ')
                 .replace(/\s+/g, ' ')
-                .replace(/^\s*\.\s*/gm, '')
                 .replace(/^\s*[-*•]\s*/gm, '')
                 .trim();
         }
@@ -423,15 +396,12 @@
             const lines = resumeData.cleaned.split('\n').map(l => l.trim()).filter(l => l);
             let currentSection = '';
 
-            resumeData.name = lines[0] || 'Your Name';
-            resumeData.contact = lines[1] || 'your.email@example.com | (123) 456-7890 | Sydney, NSW';
-
             resumeData.summary = '';
             resumeData.experience = [];
             resumeData.skills = [];
             resumeData.education = '';
 
-            lines.slice(2).forEach(line => {
+            lines.forEach(line => {
                 const upper = line.toUpperCase();
                 if (upper.includes('SUMMARY') || upper.includes('PROFILE')) {
                     currentSection = 'summary';
@@ -500,20 +470,11 @@
             results.innerHTML = html;
         }
 
-        function regenerateResume() {
-            if (!resumeData.raw) {
-                showToast('No resume to regenerate! Paste first.', 'error');
-                return;
-            }
-            generateResume();
-            showToast('Resume regenerated!', 'success');
-        }
-
         function generateResume() {
             if (!resumeData.raw) return;
             const format = document.getElementById('formatSelect').value;
             const optimized = buildFullResume();
-            const template = getFullPageTemplate(parseInt(format), optimized);
+            const template = getCleanTemplate(parseInt(format), optimized);
             document.getElementById('generatedResume').innerHTML = template;
             document.getElementById('generatedSection').classList.remove('hidden');
         }
@@ -532,8 +493,6 @@
             }
 
             return {
-                name: resumeData.name,
-                contact: resumeData.contact,
                 summary: resumeData.summary.trim(),
                 experience: exp,
                 skills: [...new Set([...resumeData.skills, ...resumeData.jobKeywords.map(k => k.charAt(0).toUpperCase() + k.slice(1))])].slice(0, 20),
@@ -564,11 +523,9 @@
             return fillers[Math.floor(Math.random() * fillers.length)];
         }
 
-        function getFullPageTemplate(format, data) {
+        function getCleanTemplate(format, data) {
             const base = `
                 <div>
-                    <div class="name-title">${data.name}</div>
-                    <p class="contact">${data.contact}</p>
                     <h2>Professional Summary</h2>
                     <p>${data.summary}</p>
                     <h2>Technical Skills</h2>
@@ -618,7 +575,7 @@
             document.getElementById('jobDescText').value = '';
             document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
             resumeData = {
-                raw: '', cleaned: '', name: '', contact: '', summary: '', experience: [], skills: [], education: '',
+                raw: '', cleaned: '', summary: '', experience: [], skills: [], education: '',
                 jobKeywords: [], score: 0, keywords: { found: [], missing: [] }
             };
             showToast('All cleared!', 'success');
