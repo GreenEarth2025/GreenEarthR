@@ -3,304 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Formatter & Analyzer</title>
+    <title>Mopuri ATS-Optimized Resume Builder Pro</title>
+    <meta name="description" content="Free ATS-friendly resume generator with 10 formats, grammar check, keyword optimization, and job-landing tips.">
+    
+    <!-- Libraries -->
     <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.32/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        textarea { width: 100%; height: 200px; margin-bottom: 10px; }
-        button { padding: 10px 15px; margin: 5px; }
-        .section { margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; }
-        .format-resume { white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: #f9f9f9; }
-        .error { color: red; }
-        .suggestion { color: blue; }
-        input[type="text"] { width: 200px; margin: 5px; }
+        :root {
+            --bg: #0f0f0f;
+            --text: #e0e0e0;
+            --accent: #00d4ff;
+            --card: #1a1a1a;
+            --border: #333;
+            --success: #00ff88;
+            --warning: #ffcc00;
+            --error: #ff4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,212,255,0.1);
+        }
+
+        h1 { 
+            font-size: 2.5rem; 
+            background: linear-gradient(90deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--accent);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+            background: var(--card);
+        }
+
+        .upload-area.dragover {
+            background: rgba(0,212,255,0.1);
+            border-color: var(--success);
+        }
+
+        .upload-area label {
+            display: block;
+            padding: 15px;
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .upload-area label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
+        }
+
+        input[type="file"] { display: none; }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #111;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .section {
+            background: var(--card);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .section h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        button {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
+        }
+
+        button.secondary {
+            background: #444;
+            color: var(--text);
+        }
+
+        button.danger {
+            background: var(--error);
+            color: white;
+        }
+
+        select {
+            background: #111;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px;
+            min-width: 200px;
+        }
+
+        .format-resume {
+            background: white;
+            color: black;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 8px;
+            min-height: 800px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            font-family: 'Times New Roman', serif;
+        }
+
+        .ats-score {
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .ats-90 { background: #00ff88; color: #000; }
+        .ats-70 { background: #ffcc00; color: #000; }
+        .ats-50 { background: #ff8800; color: #000; }
+        .ats-low { background: #ff4444; color: white; }
+
+        .keyword-tag {
+            display: inline-block;
+            background: var(--accent);
+            color: #000;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .missing-keyword {
+            background: var(--error);
+            color: white;
+        }
+
+        .tip-box {
+            background: rgba(0,212,255,0.1);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .example-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid var(--border);
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,212,255,0.2);
+            border-color: var(--accent);
+        }
+
+        .example-card h4 {
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .hidden { display: none; }
+
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .flex { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
-    <h1>Mopuri Resume Formatter & Analyzer</h1>
-    <div class="section">
-        <h2>Upload or Paste Your Resume</h2>
-        <textarea id="resumeText" placeholder="Paste your resume content here..."></textarea>
-        <button onclick="processResume()">Process Resume</button>
-    </div>
+    <div class="container">
+        <header>
+            <h1>ATS Resume Builder Pro</h1>
+            <p>10 Professional Formats • ATS Optimized • Grammar Check • Job-Landing Tips</p>
+        </header>
 
-    <div class="section">
-        <h2>Keyword Search</h2>
-        <input type="text" id="keywordInput" placeholder="Enter keywords (comma-separated)">
-        <button onclick="searchKeywords()">Search Keywords</button>
-        <div id="keywordResults"></div>
-    </div>
+        <!-- Upload Section -->
+        <div class="section">
+            <h2>Upload or Paste Your Resume</h2>
+            <div class="upload-area" id="uploadArea">
+                <label for="resumeFile">Choose File or Drag & Drop (.docx, .pdf, .txt)</label>
+                <input type="file" id="resumeFile" accept=".docx,.pdf,.txt">
+                <p style="margin-top:10px; color:#888;">OR paste below:</p>
+            </div>
+            <textarea id="resumeText" placeholder="Paste your resume content here..."></textarea>
+            <div class="flex">
+                <button onclick="processResume()">Analyze & Optimize Resume</button>
+                <button class="secondary" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
 
-    <div class="section">
-        <h2>Grammar Check & Suggestions</h2>
-        <div id="grammarResults"></div>
-    </div>
+        <!-- Resume Examples -->
+        <div class="section">
+            <h2>Professional Resume Examples (3-4 Pages Each)</h2>
+            <p>Click any example to load a complete, ATS-optimized resume:</p>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample(0)">
+                    <h4>Software Engineer</h4>
+                    <p>Senior Full-Stack Developer • 5+ Years</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:95%"></div></div>
+                    <small>ATS Score: 95%</small>
+                </div>
+                <div class="example-card" onclick="loadExample(1)">
+                    <h4>Product Manager</h4>
+                    <p>Agile • SaaS • B2B • 7+ Years</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+                    <small>ATS Score: 92%</small>
+                </div>
+                <div class="example-card" onclick="loadExample(2)">
+                    <h4>Data Scientist</h4>
+                    <p>Python • ML • AWS • PhD</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:97%"></div></div>
+                    <small>ATS Score: 97%</small>
+                </div>
+                <div class="example-card" onclick="loadExample(3)">
+                    <h4>Marketing Director</h4>
+                    <p>SEO • Growth • $10M Budget</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+                    <small>ATS Score: 90%</small>
+                </div>
+                <div class="example-card" onclick="loadExample(4)">
+                    <h4>UX Designer</h4>
+                    <p>Figma • User Research • A/B Testing</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
+                    <small>ATS Score: 94%</small>
+                </div>
+            </div>
+        </div>
 
-    <div class="section">
-        <h2>Select Format & Generate</h2>
-        <select id="formatSelect">
-            <option value="0">1. Reverse Chronological</option>
-            <option value="1">2. Functional</option>
-            <option value="2">3. Combination</option>
-            <option value="3">4. Modern Minimalist</option>
-            <option value="4">5. Creative Visual</option>
-            <option value="5">6. Academic</option>
-            <option value="6">7. One-Page Compact</option>
-            <option value="7">8. Skills-Based</option>
-            <option value="8">9. Infographic Style</option>
-            <option value="9">10. Professional Classic</option>
-        </select>
-        <button onclick="generateResume()">Generate Resume</button>
-        <div id="generatedResume"></div>
-        <button id="saveWordBtn" onclick="saveAsWord()" style="display:none;">Save as Word (.docx)</button>
-        <button id="savePdfBtn" onclick="saveAsPdf()" style="display:none;">Save as PDF</button>
+        <!-- Analysis Results -->
+        <div class="section" id="analysisSection" class="hidden">
+            <h2>ATS & Grammar Analysis</h2>
+            <div id="atsScore" class="ats-score ats-low">Analyzing...</div>
+            <div id="analysisResults"></div>
+        </div>
+
+        <!-- Format Selection -->
+        <div class="section">
+            <h2>Select Resume Format</h2>
+            <div class="flex">
+                <select id="formatSelect">
+                    <option value="0">1. Reverse Chronological (Most Popular)</option>
+                    <option value="1">2. Functional (Skills-Focused)</option>
+                    <option value="2">3. Combination (Hybrid)</option>
+                    <option value="3">4. Modern Minimalist</option>
+                    <option value="4">5. Creative Visual</option>
+                    <option value="5">6. Academic CV</option>
+                    <option value="6">7. One-Page Executive</option>
+                    <option value="7">8. Skills-Based Tech</option>
+                    <option value="8">9. Infographic Style</option>
+                    <option value="9">10. Federal Resume</option>
+                </select>
+                <button onclick="generateResume()">Generate Resume</button>
+            </div>
+        </div>
+
+        <!-- Generated Resume -->
+        <div class="section" id="generatedSection" class="hidden">
+            <h2>Generated Resume (ATS Optimized)</h2>
+            <div id="generatedResume" class="format-resume"></div>
+            <div class="flex">
+                <button onclick="saveAsPdf()">Download PDF</button>
+                <button onclick="saveAsWord()">Download Word (.docx)</button>
+                <button class="secondary" onclick="copyToClipboard()">Copy HTML</button>
+            </div>
+        </div>
+
+        <!-- Job Tips -->
+        <div class="section">
+            <h2>Job Landing Tips</h2>
+            <div class="tip-box">
+                <strong>Quantify Achievements:</strong> Use numbers — "Increased revenue by 40%" beats "Improved sales"
+            </div>
+            <div class="tip-box">
+                <strong>Tailor for Each Job:</strong> Match 70% of job description keywords
+            </div>
+            <div class="tip-box">
+                <strong>Action Verbs:</strong> Start bullets with Led, Developed, Optimized, Achieved
+            </div>
+        </div>
     </div>
 
     <script>
-        // Predefined keywords from search results (top 20 for demo)
-        const predefinedKeywords = [
-            'managed', 'developed', 'led', 'project management', 'data analysis', 'team leadership',
-            'increased sales', 'optimized', 'collaborated', 'achieved', 'implemented', 'analyzed',
-            'coordinated', 'designed', 'executed', 'forecasted', 'generated', 'improved', 'negotiated', 'planned'
-        ];
+        // Global variables
+        let currentResume = {
+            text: '',
+            sections: {},
+            keywords: [],
+            score: 0
+        };
 
-        // Common grammar errors and suggestions
-        const commonErrors = [
-            { pattern: /\bit's\b/g, replacement: "it's (it is)", suggestion: 'Use "its" for possession if not "it is".' },
-            { pattern: /\bthere\b/g, replacement: "their/they're", suggestion: 'Check if "their" (possession) or "they\'re" (they are).' },
-            { pattern: /\baffect\b/g, replacement: "effect", suggestion: 'Use "effect" for noun (result), "affect" for verb (influence).' },
-            { pattern: /\bme\b/g, replacement: "I", suggestion: 'Use "I" as subject, "me" as object.' },
-            { pattern: /\bthen\b/g, replacement: "than", suggestion: 'Use "than" for comparisons, "then" for sequence.' }
-        ];
+        const ATS_KEYWORDS = {
+            technical: ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'SQL', 'Git', 'Agile', 'CI/CD', 'REST API', 'Microservices', 'TypeScript', 'Kubernetes', 'Terraform'],
+            soft: ['Leadership', 'Communication', 'Collaboration', 'Problem-solving', 'Project Management', 'Stakeholder Management', 'Strategic Planning'],
+            action: ['Led', 'Developed', 'Implemented', 'Optimized', 'Increased', 'Reduced', 'Managed', 'Designed', 'Executed', 'Achieved', 'Improved', 'Delivered', 'Transformed', 'Automated', 'Streamlined']
+        };
 
-        let currentResumeText = '';
+        const RESUME_EXAMPLES = [
+            // 0: Software Engineer (4 pages)
+            `JOHN DOE
+Senior Full-Stack Software Engineer
+Seattle, WA | (555) 123-4567 | john.doe@email.com | linkedin.com/in/johndoe | github.com/johndoe
 
-        function processResume() {
-            currentResumeText = document.getElementById('resumeText').value;
-            if (!currentResumeText) {
-                alert('Please paste your resume first!');
-                return;
-            }
-            checkGrammar();
-            searchKeywords(); // Auto-search with predefined
-            document.getElementById('saveWordBtn').style.display = 'inline';
-            document.getElementById('savePdfBtn').style.display = 'inline';
-        }
+PROFESSIONAL SUMMARY
+Results-driven Senior Full-Stack Engineer with 7+ years of experience building scalable web applications. Expert in React, Node.js, and AWS. Led teams to deliver 15+ production systems serving 5M+ users. Reduced infrastructure costs by 45% through optimization.
 
-        function checkGrammar() {
-            const resultsDiv = document.getElementById('grammarResults');
-            let output = '<h3>Grammar Check Results:</h3>';
-            let hasErrors = false;
+TECHNICAL SKILLS
+Languages: JavaScript (ES6+), TypeScript, Python, Java, SQL
+Frontend: React, Redux, Next.js, HTML5, CSS3, Tailwind CSS
+Backend: Node.js, Express, NestJS, Django, Spring Boot
+Databases: PostgreSQL, MySQL, MongoDB, Redis
+Cloud: AWS (EC2, S3, Lambda, RDS, CloudFront), Docker, Kubernetes
+Tools: Git, Jenkins, Terraform, Datadog, Jira
 
-            commonErrors.forEach(error => {
-                const matches = currentResumeText.match(error.pattern);
-                if (matches) {
-                    hasErrors = true;
-                    output += `<p class="error">Potential error: "${matches[0]}" -> ${error.replacement} <span class="suggestion">(${error.suggestion})</span></p>`;
-                }
-            });
+PROFESSIONAL EXPERIENCE
+Amazon Web Services (AWS), Seattle, WA
+Senior Software Engineer
+June 2021 – Present
+• Led migration of legacy monolith to microservices architecture using Node.js and AWS Lambda, reducing latency by 60%
+• Designed and implemented real-time analytics dashboard using React and WebSocket, serving 500K daily active users
+• Mentored 5 junior engineers and established code review standards, improving team velocity by 30%
+• Optimized CI/CD pipeline with Jenkins and Terraform, reducing deployment time from 45min to 8min
+• Implemented security best practices including OAuth2, JWT, and rate limiting
 
-            if (!hasErrors) {
-                output += '<p class="suggestion">No common grammatical errors detected! Great job.</p>';
-            } else {
-                output += '<p class="suggestion">Recommendations: Proofread for tense consistency, punctuation, and capitalization. Use tools like Grammarly for deeper checks.</p>';
-            }
-            resultsDiv.innerHTML = output;
-        }
+Microsoft, Redmond, WA
+Software Engineer II
+March 2018 – May 2021
+• Developed internal tooling platform using React and Python, adopted by 200+ engineers
+• Reduced API response time by 70% through query optimization and caching strategies
+• Built automated testing framework with Jest and Cypress, achieving 95% code coverage
+• Collaborated with product teams to define API contracts and improve developer experience
 
-        function searchKeywords() {
-            const input = document.getElementById('keywordInput').value.toLowerCase().split(',').map(k => k.trim()).filter(k => k);
-            const resultsDiv = document.getElementById('keywordResults');
-            let output = '<h3>Keyword Search Results:</h3>';
-            let found = [];
+StartupXYZ, San Francisco, CA
+Junior Software Engineer
+July 2016 – February 2018
+• Built MVP for SaaS product using MERN stack, launched to 10K users in 3 months
+• Implemented payment processing with Stripe and subscription management
+• Created responsive UI components with 99% accessibility compliance
 
-            if (input.length === 0) {
-                input.push(...predefinedKeywords.map(k => k.toLowerCase()));
-            }
+EDUCATION
+University of Washington, Seattle, WA
+Bachelor of Science in Computer Science
+Graduated: June 2016, GPA: 3.8/4.0
+Relevant Coursework: Algorithms, Data Structures, Operating Systems, Distributed Systems
 
-            input.forEach(keyword => {
-                if (currentResumeText.toLowerCase().includes(keyword)) {
-                    found.push(keyword);
-                    output += `<p class="suggestion">✓ Found: "${keyword}"</p>`;
-                } else {
-                    output += `<p class="error">✗ Missing: "${keyword}" - Suggestion: Add relevant experience with this keyword.</p>`;
-                }
-            });
+CERTIFICATIONS
+• AWS Certified Solutions Architect – Professional (2023)
+• Google Cloud Professional Cloud Developer (2022)
+• Certified Scrum Master (CSM) (2021)
 
-            output += `<p><strong>Summary:</strong> Found ${found.length}/${input.length} keywords. Tailor your resume to include more for ATS optimization.</p>`;
-            resultsDiv.innerHTML = output;
-        }
+PROJECTS
+Open Source Contributor
+• React Query – 500+ stars on GitHub
+• Node.js Performance Toolkit – Featured in Node Weekly
 
-        const formatTemplates = [
-            // 1. Reverse Chronological
-            `<div class="format-resume">
-<h2>Contact Info</h2>
-<p>[Your Name]</p>
-<p>[Address] | [Phone] | [Email]</p>
+LANGUAGES
+English (Native), Spanish (Conversational)`,
 
-<h2>Professional Summary</h2>
-<p>[Summary from input]</p>
+            // 1: Product Manager
+            `SARAH CHEN
+Product Manager | SaaS & B2B Expert
+San Francisco, CA | (555) 987-6543 | sarah.chen@email.com | linkedin.com/in/sarahchen
 
-<h2>Work Experience</h2>
-<p>[Extracted experience in reverse order]</p>
+EXECUTIVE SUMMARY
+Strategic Product Manager with 8+ years leading SaaS products from ideation to $10M+ ARR. Expert in Agile methodologies, customer development, and cross-functional leadership. Grew user base 300% and reduced churn by 65% through data-driven decisions.
 
-<h2>Education</h2>
-<p>[Education]</p>
+CORE COMPETENCIES
+• Product Strategy & Roadmap Planning
+• Agile/Scrum Master (CSM, CSPO)
+• Customer Discovery & Validation
+• SQL, Amplitude, Mixpanel Analytics
+• A/B Testing & Experiment Design
+• Stakeholder Management
+• Go-to-Market Strategy
+• Pricing & Packaging
 
-<h2>Skills</h2>
-<p>[Skills]</p>
-</div>`,
+PROFESSIONAL EXPERIENCE
+Salesforce, San Francisco, CA
+Senior Product Manager
+January 2022 – Present
+• Own Einstein Analytics product line generating $25M ARR
+• Led cross-functional team of 12 (eng, design, data) to launch AI-powered insights feature
+• Increased adoption 180% through targeted onboarding and in-app guidance
+• Reduced churn 45% by implementing predictive churn model
+• Drove pricing strategy resulting in 28% revenue uplift
 
-            // 2. Functional
-            `<div class="format-resume">
-<h2>Contact Info</h2>
-<p>[Your Name]</p>
-<p>[Address] | [Phone] | [Email]</p>
+Google, Mountain View, CA
+Product Manager
+June 2018 – December 2021
+• Managed Google Workspace add-ons marketplace
+• Grew developer ecosystem from 50 to 500+ partners
+• Launched certification program improving app quality by 70%
+• Partnered with sales to close enterprise deals worth $15M+
 
-<h2>Skills Summary</h2>
-<ul><li>[Skill 1]</li><li>[Skill 2]</li></ul>
-
-<h2>Professional Summary</h2>
-<p>[Summary]</p>
-
-<h2>Work History</h2>
-<p>[Brief job list]</p>
-</div>`,
-
-            // 3. Combination
-            `<div class="format-resume">
-<h2>Contact Info</h2>
-<p>[Your Name]</p>
-
-<h2>Skills & Achievements</h2>
-<ul><li>[Achievement 1]</li></ul>
-
-<h2>Work Experience</h2>
-<p>[Detailed experience]</p>
-
-<h2>Education</h2>
-<p>[Education]</p>
-</div>`,
-
-            // 4. Modern Minimalist
-            `<div class="format-resume" style="font-family: sans-serif; line-height: 1.4;">
-<h2 style="border-bottom: 2px solid #000;">[Name]</h2>
-<p style="float: right;">[Contact]</p>
-<p>[Summary]</p>
-<h3>Experience</h3><p>[Exp]</p>
-<h3>Skills</h3><p>[Skills]</p>
-</div>`,
-
-            // 5. Creative Visual (text-based)
-            `<div class="format-resume">
-<h2>🌟 [Name] 🌟</h2>
-<p>📧 [Email] | 📱 [Phone]</p>
-<h3>🚀 Achievements</h3><p>[Achievements]</p>
-<h3>💼 Experience</h3><p>[Exp]</p>
-</div>`,
-
-            // 6. Academic
-            `<div class="format-resume">
-<h2>[Name]</h2>
-<h3>Education</h3><p>[Degrees, Publications]</p>
-<h3>Research Experience</h3><p>[Research]</p>
-<h3>Teaching</h3><p>[Teaching]</p>
-</div>`,
-
-            // 7. One-Page Compact
-            `<div class="format-resume" style="font-size: 12px;">
-<h2>[Name] - [Summary]</h2>
-<p>[Contact]</p>
-<ul><li>[Exp 1]</li><li>[Exp 2]</li><li>[Skills]</li><li>[Education]</li></ul>
-</div>`,
-
-            // 8. Skills-Based
-            `<div class="format-resume">
-<h2>[Name]</h2>
-<h3>Core Skills</h3>
-<table><tr><td>Technical:</td><td>[Tech skills]</td></tr><tr><td>Soft:</td><td>[Soft skills]</td></tr></table>
-<h3>Experience</h3><p>[Brief]</p>
-</div>`,
-
-            // 9. Infographic Style (text sim)
-            `<div class="format-resume">
-<h2>[Name]</h2>
-<p>Progress: Experience ██████████ 90%</p>
-<p>Skills: Leadership ███████░░░ 70%</p>
-<p>[Details]</p>
-</div>`,
-
-            // 10. Professional Classic
-            `<div class="format-resume">
-<h2>[Name]</h2>
-<p>[Address]</p>
-<hr>
-<h3>Objective</h3><p>[Objective]</p>
-<h3>Experience</h3><p>[Exp]</p>
-<h3>References</h3><p>Available upon request.</p>
-</div>`
-        ];
-
-        function generateResume() {
-            if (!currentResumeText) {
-                alert('Process resume first!');
-                return;
-            }
-            const selected = document.getElementById('formatSelect').value;
-            let template = formatTemplates[selected];
-            // Simple parsing: replace placeholders with sections from text
-            const lines = currentResumeText.split('\n');
-            let summary = lines.find(l => l.includes('Summary') || l.includes('Objective')) || 'Professional summary...';
-            let experience = lines.filter(l => l.includes('Experience') || l.match(/\d{4}/)).join('\n') || 'Work experience...';
-            let education = lines.find(l => l.includes('Education')) || 'Education details...';
-            let skills = lines.find(l => l.includes('Skills')) || 'Key skills...';
-
-            template = template
-                .replace(/\[Your Name\]/g, 'John Doe') // Placeholder
-                .replace(/\[Summary from input\]/g, summary)
-                .replace(/\[Summary\]/g, summary)
-                .replace(/\[Extracted experience in reverse order\]/g, experience)
-                .replace(/\[Education\]/g, education)
-                .replace(/\[Skills\]/g, skills)
-                .replace(/\[Exp\]/g, experience)
-                .replace(/\[Contact\]/g, 'contact@example.com')
-                .replace(/\[Name\]/g, 'John Doe')
-                .replace(/\[Achievement 1\]/g, 'Achievement example')
-                .replace(/\[Brief job list\]/g, experience)
-                .replace(/\[Degrees, Publications\]/g, education)
-                .replace(/\[Research\]/g, 'Research...')
-                .replace(/\[Teaching\]/g, 'Teaching...')
-                .replace(/\[Exp 1\]/g, experience.split('\n')[0])
-                .replace(/\[Exp 2\]/g, experience.split('\n')[1] || '')
-                .replace(/\[Tech skills\]/g, 'Tech...')
-                .replace(/\[Soft skills\]/g, 'Soft...')
-                .replace(/\[Brief\]/g, experience)
-                .replace(/\[Details\]/g, skills)
-                .replace(/\[Objective\]/g, summary);
-
-            document.getElementById('generatedResume').innerHTML = `<h3>Generated Resume (${parseInt(selected) + 1}):</h3>` + template;
-        }
-
-        function saveAsWord() {
-            const content = document.getElementById('generatedResume').innerText;
-            const htmlContent = `<html><body><pre>${content}</pre></body></html>`;
-            const blob = new Blob([htmlContent], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'resume.doc';
-            a.click();
-        }
-
-        async function saveAsPdf() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const content = document.getElementById('generatedResume').innerText;
-            doc.text(content, 10, 10);
-            doc.save('resume.pdf');
-        }
-    </script>
-</body>
-</html>
+Startup Inc, Palo Alto, CA
+Associate Product Manager
+May 2016 – May 2018
+• Built MVP for collaboration tool in 3 months
+• Achieved product-market
