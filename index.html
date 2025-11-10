@@ -145,6 +145,7 @@
             font-family: inherit;
         }
 
+        /* FIXED: Resume Title Font Size */
         .format-resume {
             background: white;
             color: black;
@@ -159,12 +160,14 @@
             border: 1px solid #ddd;
         }
 
-        .format-resume h1 {
-            font-size: 28pt;
+        .format-resume .name-title {
+            font-size: 18pt; /* Reduced from 28pt */
             margin-bottom: 8pt;
             color: #1a1a1a;
             font-weight: bold;
             text-align: center;
+            letter-spacing: 0.5pt;
+            text-transform: uppercase;
         }
 
         .format-resume .contact {
@@ -271,6 +274,7 @@
             h1 { font-size: 2.2rem; }
             .flex { flex-direction: column; }
             .format-resume { padding: 25px; font-size: 10.5pt; }
+            .format-resume .name-title { font-size: 16pt; }
         }
     </style>
 </head>
@@ -359,7 +363,7 @@
             experience: [],
             skills: [],
             education: '',
-            jobKeywords: [],
+            jobKeywords:: [],
             score: 0,
             keywords: { found: [], missing: [] }
         };
@@ -391,10 +395,10 @@
 
         function cleanResumeText(text) {
             return text
-                .replace(/[^\w\s,.;:!?()'-]/g, ' ') // Remove weird symbols
-                .replace(/\s+/g, ' ') // Collapse spaces
-                .replace(/^\s*\.\s*/gm, '') // Remove leading dots
-                .replace(/^\s*[-*•]\s*/gm, '') // Remove bullet markers
+                .replace(/[^\w\s,.;:!?()'-]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/^\s*\.\s*/gm, '')
+                .replace(/^\s*[-*•]\s*/gm, '')
                 .trim();
         }
 
@@ -445,7 +449,6 @@
                 }
             });
 
-            // Default fallbacks
             if (!resumeData.summary) resumeData.summary = 'Results-driven Senior Test Analyst with 8+ years in automation and performance testing.';
             if (resumeData.skills.length === 0) resumeData.skills = ['Selenium', 'Java', 'JIRA', 'API Testing', 'Agile', 'Jenkins'];
             if (!resumeData.education) resumeData.education = 'Bachelor of Engineering in Computer Science, University of Sydney';
@@ -504,13 +507,11 @@
             let exp = resumeData.experience.slice(0, 12);
             const missing = resumeData.keywords.missing;
 
-            // Add missing keywords with full sentences
             missing.forEach(kw => {
                 const sentence = getKeywordSentence(kw);
                 if (sentence) exp.push(sentence);
             });
 
-            // Ensure 3+ pages: Add detailed bullets if needed
             while (exp.length < 20) {
                 exp.push(getFillerBullet());
             }
@@ -520,7 +521,7 @@
                 contact: resumeData.contact,
                 summary: resumeData.summary.trim(),
                 experience: exp,
-                skills: [...new Set([...resumeData.skills, ...resumeData.jobKeywords])].slice(0, 20),
+                skills: [...new Set([...resumeData.skills, ...resumeData.jobKeywords.map(k => k.charAt(0).toUpperCase() + k.slice(1))])].slice(0, 20),
                 education: resumeData.education.trim()
             };
         }
@@ -551,7 +552,7 @@
         function getFullPageTemplate(format, data) {
             const base = `
                 <div>
-                    <h1>${data.name}</h1>
+                    <div class="name-title">${data.name}</div>
                     <p class="contact">${data.contact}</p>
                     <h2>Professional Summary</h2>
                     <p>${data.summary}</p>
@@ -573,7 +574,6 @@
                     </div>
                 </div>`;
 
-            // All formats use same rich content to ensure 3+ pages
             const templates = Array(10).fill(base);
             return templates[format] || base;
         }
