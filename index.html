@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Formatter & Analyzer</title>
+    <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.32/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+        button { padding: 10px 15px; margin: 5px; }
+        .section { margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; }
+        .format-resume { white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: #f9f9f9; }
+        .error { color: red; }
+        .suggestion { color: blue; }
+        input[type="text"] { width: 200px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Resume Formatter & Analyzer</h1>
+    <div class="section">
+        <h2>Upload or Paste Your Resume</h2>
+        <textarea id="resumeText" placeholder="Paste your resume content here..."></textarea>
+        <button onclick="processResume()">Process Resume</button>
+    </div>
+
+    <div class="section">
+        <h2>Keyword Search</h2>
+        <input type="text" id="keywordInput" placeholder="Enter keywords (comma-separated)">
+        <button onclick="searchKeywords()">Search Keywords</button>
+        <div id="keywordResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>Grammar Check & Suggestions</h2>
+        <div id="grammarResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>Select Format & Generate</h2>
+        <select id="formatSelect">
+            <option value="0">1. Reverse Chronological</option>
+            <option value="1">2. Functional</option>
+            <option value="2">3. Combination</option>
+            <option value="3">4. Modern Minimalist</option>
+            <option value="4">5. Creative Visual</option>
+            <option value="5">6. Academic</option>
+            <option value="6">7. One-Page Compact</option>
+            <option value="7">8. Skills-Based</option>
+            <option value="8">9. Infographic Style</option>
+            <option value="9">10. Professional Classic</option>
+        </select>
+        <button onclick="generateResume()">Generate Resume</button>
+        <div id="generatedResume"></div>
+        <button id="saveWordBtn" onclick="saveAsWord()" style="display:none;">Save as Word (.docx)</button>
+        <button id="savePdfBtn" onclick="saveAsPdf()" style="display:none;">Save as PDF</button>
+    </div>
+
+    <script>
+        // Predefined keywords from search results (top 20 for demo)
+        const predefinedKeywords = [
+            'managed', 'developed', 'led', 'project management', 'data analysis', 'team leadership',
+            'increased sales', 'optimized', 'collaborated', 'achieved', 'implemented', 'analyzed',
+            'coordinated', 'designed', 'executed', 'forecasted', 'generated', 'improved', 'negotiated', 'planned'
+        ];
+
+        // Common grammar errors and suggestions
+        const commonErrors = [
+            { pattern: /\bit's\b/g, replacement: "it's (it is)", suggestion: 'Use "its" for possession if not "it is".' },
+            { pattern: /\bthere\b/g, replacement: "their/they're", suggestion: 'Check if "their" (possession) or "they\'re" (they are).' },
+            { pattern: /\baffect\b/g, replacement: "effect", suggestion: 'Use "effect" for noun (result), "affect" for verb (influence).' },
+            { pattern: /\bme\b/g, replacement: "I", suggestion: 'Use "I" as subject, "me" as object.' },
+            { pattern: /\bthen\b/g, replacement: "than", suggestion: 'Use "than" for comparisons, "then" for sequence.' }
+        ];
+
+        let currentResumeText = '';
+
+        function processResume() {
+            currentResumeText = document.getElementById('resumeText').value;
+            if (!currentResumeText) {
+                alert('Please paste your resume first!');
+                return;
+            }
+            checkGrammar();
+            searchKeywords(); // Auto-search with predefined
+            document.getElementById('saveWordBtn').style.display = 'inline';
+            document.getElementById('savePdfBtn').style.display = 'inline';
+        }
+
+        function checkGrammar() {
+            const resultsDiv = document.getElementById('grammarResults');
+            let output = '<h3>Grammar Check Results:</h3>';
+            let hasErrors = false;
+
+            commonErrors.forEach(error => {
+                const matches = currentResumeText.match(error.pattern);
+                if (matches) {
+                    hasErrors = true;
+                    output += `<p class="error">Potential error: "${matches[0]}" -> ${error.replacement} <span class="suggestion">(${error.suggestion})</span></p>`;
+                }
+            });
+
+            if (!hasErrors) {
+                output += '<p class="suggestion">No common grammatical errors detected! Great job.</p>';
+            } else {
+                output += '<p class="suggestion">Recommendations: Proofread for tense consistency, punctuation, and capitalization. Use tools like Grammarly for deeper checks.</p>';
+            }
+            resultsDiv.innerHTML = output;
+        }
+
+        function searchKeywords() {
+            const input = document.getElementById('keywordInput').value.toLowerCase().split(',').map(k => k.trim()).filter(k => k);
+            const resultsDiv = document.getElementById('keywordResults');
+            let output = '<h3>Keyword Search Results:</h3>';
+            let found = [];
+
+            if (input.length === 0) {
+                input.push(...predefinedKeywords.map(k => k.toLowerCase()));
+            }
+
+            input.forEach(keyword => {
+                if (currentResumeText.toLowerCase().includes(keyword)) {
+                    found.push(keyword);
+                    output += `<p class="suggestion">✓ Found: "${keyword}"</p>`;
+                } else {
+                    output += `<p class="error">✗ Missing: "${keyword}" - Suggestion: Add relevant experience with this keyword.</p>`;
+                }
+            });
+
+            output += `<p><strong>Summary:</strong> Found ${found.length}/${input.length} keywords. Tailor your resume to include more for ATS optimization.</p>`;
+            resultsDiv.innerHTML = output;
+        }
+
+        const formatTemplates = [
+            // 1. Reverse Chronological
+            `<div class="format-resume">
+<h2>Contact Info</h2>
+<p>[Your Name]</p>
+<p>[Address] | [Phone] | [Email]</p>
+
+<h2>Professional Summary</h2>
+<p>[Summary from input]</p>
+
+<h2>Work Experience</h2>
+<p>[Extracted experience in reverse order]</p>
+
+<h2>Education</h2>
+<p>[Education]</p>
+
+<h2>Skills</h2>
+<p>[Skills]</p>
+</div>`,
+
+            // 2. Functional
+            `<div class="format-resume">
+<h2>Contact Info</h2>
+<p>[Your Name]</p>
+<p>[Address] | [Phone] | [Email]</p>
+
+<h2>Skills Summary</h2>
+<ul><li>[Skill 1]</li><li>[Skill 2]</li></ul>
+
+<h2>Professional Summary</h2>
+<p>[Summary]</p>
+
+<h2>Work History</h2>
+<p>[Brief job list]</p>
+</div>`,
+
+            // 3. Combination
+            `<div class="format-resume">
+<h2>Contact Info</h2>
+<p>[Your Name]</p>
+
+<h2>Skills & Achievements</h2>
+<ul><li>[Achievement 1]</li></ul>
+
+<h2>Work Experience</h2>
+<p>[Detailed experience]</p>
+
+<h2>Education</h2>
+<p>[Education]</p>
+</div>`,
+
+            // 4. Modern Minimalist
+            `<div class="format-resume" style="font-family: sans-serif; line-height: 1.4;">
+<h2 style="border-bottom: 2px solid #000;">[Name]</h2>
+<p style="float: right;">[Contact]</p>
+<p>[Summary]</p>
+<h3>Experience</h3><p>[Exp]</p>
+<h3>Skills</h3><p>[Skills]</p>
+</div>`,
+
+            // 5. Creative Visual (text-based)
+            `<div class="format-resume">
+<h2>🌟 [Name] 🌟</h2>
+<p>📧 [Email] | 📱 [Phone]</p>
+<h3>🚀 Achievements</h3><p>[Achievements]</p>
+<h3>💼 Experience</h3><p>[Exp]</p>
+</div>`,
+
+            // 6. Academic
+            `<div class="format-resume">
+<h2>[Name]</h2>
+<h3>Education</h3><p>[Degrees, Publications]</p>
+<h3>Research Experience</h3><p>[Research]</p>
+<h3>Teaching</h3><p>[Teaching]</p>
+</div>`,
+
+            // 7. One-Page Compact
+            `<div class="format-resume" style="font-size: 12px;">
+<h2>[Name] - [Summary]</h2>
+<p>[Contact]</p>
+<ul><li>[Exp 1]</li><li>[Exp 2]</li><li>[Skills]</li><li>[Education]</li></ul>
+</div>`,
+
+            // 8. Skills-Based
+            `<div class="format-resume">
+<h2>[Name]</h2>
+<h3>Core Skills</h3>
+<table><tr><td>Technical:</td><td>[Tech skills]</td></tr><tr><td>Soft:</td><td>[Soft skills]</td></tr></table>
+<h3>Experience</h3><p>[Brief]</p>
+</div>`,
+
+            // 9. Infographic Style (text sim)
+            `<div class="format-resume">
+<h2>[Name]</h2>
+<p>Progress: Experience ██████████ 90%</p>
+<p>Skills: Leadership ███████░░░ 70%</p>
+<p>[Details]</p>
+</div>`,
+
+            // 10. Professional Classic
+            `<div class="format-resume">
+<h2>[Name]</h2>
+<p>[Address]</p>
+<hr>
+<h3>Objective</h3><p>[Objective]</p>
+<h3>Experience</h3><p>[Exp]</p>
+<h3>References</h3><p>Available upon request.</p>
+</div>`
+        ];
+
+        function generateResume() {
+            if (!currentResumeText) {
+                alert('Process resume first!');
+                return;
+            }
+            const selected = document.getElementById('formatSelect').value;
+            let template = formatTemplates[selected];
+            // Simple parsing: replace placeholders with sections from text
+            const lines = currentResumeText.split('\n');
+            let summary = lines.find(l => l.includes('Summary') || l.includes('Objective')) || 'Professional summary...';
+            let experience = lines.filter(l => l.includes('Experience') || l.match(/\d{4}/)).join('\n') || 'Work experience...';
+            let education = lines.find(l => l.includes('Education')) || 'Education details...';
+            let skills = lines.find(l => l.includes('Skills')) || 'Key skills...';
+
+            template = template
+                .replace(/\[Your Name\]/g, 'John Doe') // Placeholder
+                .replace(/\[Summary from input\]/g, summary)
+                .replace(/\[Summary\]/g, summary)
+                .replace(/\[Extracted experience in reverse order\]/g, experience)
+                .replace(/\[Education\]/g, education)
+                .replace(/\[Skills\]/g, skills)
+                .replace(/\[Exp\]/g, experience)
+                .replace(/\[Contact\]/g, 'contact@example.com')
+                .replace(/\[Name\]/g, 'John Doe')
+                .replace(/\[Achievement 1\]/g, 'Achievement example')
+                .replace(/\[Brief job list\]/g, experience)
+                .replace(/\[Degrees, Publications\]/g, education)
+                .replace(/\[Research\]/g, 'Research...')
+                .replace(/\[Teaching\]/g, 'Teaching...')
+                .replace(/\[Exp 1\]/g, experience.split('\n')[0])
+                .replace(/\[Exp 2\]/g, experience.split('\n')[1] || '')
+                .replace(/\[Tech skills\]/g, 'Tech...')
+                .replace(/\[Soft skills\]/g, 'Soft...')
+                .replace(/\[Brief\]/g, experience)
+                .replace(/\[Details\]/g, skills)
+                .replace(/\[Objective\]/g, summary);
+
+            document.getElementById('generatedResume').innerHTML = `<h3>Generated Resume (${parseInt(selected) + 1}):</h3>` + template;
+        }
+
+        function saveAsWord() {
+            const content = document.getElementById('generatedResume').innerText;
+            const htmlContent = `<html><body><pre>${content}</pre></body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resume.doc';
+            a.click();
+        }
+
+        async function saveAsPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const content = document.getElementById('generatedResume').innerText;
+            doc.text(content, 10, 10);
+            doc.save('resume.pdf');
+        }
+    </script>
+</body>
+</html>
