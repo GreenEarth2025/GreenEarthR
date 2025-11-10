@@ -145,14 +145,14 @@
             font-family: inherit;
         }
 
-        /* CLEAN RESUME — NO HEADER */
+        /* RESUME FORMATS — NOW VISUALLY DISTINCT */
         .format-resume {
             background: white;
             color: black;
             padding: 45px;
             margin: 30px 0;
             border-radius: 14px;
-            min-height: 1400px;
+            min-height: 1600px;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
             font-family: 'Times New Roman', serif;
             line-height: 1.6;
@@ -181,6 +181,18 @@
         .format-resume li {
             margin: 4pt 0;
         }
+
+        /* Format-specific styles */
+        .format-0 { font-family: 'Times New Roman', serif; } /* Reverse Chrono */
+        .format-1 { font-family: Arial, sans-serif; text-align: left; } /* Functional */
+        .format-2 { font-family: Calibri, sans-serif; line-height: 1.8; } /* Hybrid */
+        .format-3 { font-family: Georgia, serif; font-size: 11pt; } /* Modern */
+        .format-4 { font-family: 'Courier New', monospace; background: #f9f9f9; } /* Creative */
+        .format-5 { font-family: 'Palatino Linotype', serif; font-style: italic; } /* Academic */
+        .format-6 { font-family: Arial, sans-serif; font-size: 10pt; } /* Executive */
+        .format-7 { font-family: Consolas, monospace; } /* Tech */
+        .format-8 { font-family: Impact, sans-serif; letter-spacing: 1px; } /* Infographic */
+        .format-9 { font-family: 'Lucida Console', monospace; font-size: 12pt; } /* Federal */
 
         .ats-score {
             font-size: 2.8rem;
@@ -278,7 +290,7 @@
             <h2>Paste Job Description</h2>
             <textarea id="jobDescText" placeholder="Paste the full job description here. We'll extract keywords and tailor your resume..."></textarea>
             <div class="flex">
-                <button id="analyzeBtn" onclick="processResume()">Analyze & Optimize</button>
+                <button onclick="processResume()">Analyze & Optimize</button>
                 <button class="secondary" onclick="clearAll()">Clear All</button>
             </div>
         </div>
@@ -295,7 +307,7 @@
             <h2>Select Resume Format</h2>
             <div class="flex">
                 <select id="formatSelect" onchange="generateResume()">
-                    <option value="0">1. Reverse Chronological (Recommended)</option>
+                    <option value="0">1. Reverse Chronological</option>
                     <option value="1">2. Functional (Skills-Focused)</option>
                     <option value="2">3. Combination (Hybrid)</option>
                     <option value="3">4. Modern Minimalist</option>
@@ -345,7 +357,8 @@
             education: '',
             jobKeywords: [],
             score: 0,
-            keywords: { found: [], missing: [] }
+            keywords: { found: [], missing: [] },
+            originalExperience: [] // NEW: Store original to prevent duplication
         };
 
         function processResume() {
@@ -415,7 +428,7 @@
                     if (currentSection === 'summary') {
                         resumeData.summary += line + ' ';
                     } else if (currentSection === 'experience') {
-                        resumeData.experience.push(line);
+                        resumeData.experience.push('• ' + line);
                     } else if (currentSection === 'skills') {
                         const skills = line.split(/[,;|]/).map(s => s.trim()).filter(s => s);
                         resumeData.skills.push(...skills);
@@ -424,6 +437,9 @@
                     }
                 }
             });
+
+            // Store original experience to prevent duplication
+            resumeData.originalExperience = [...resumeData.experience];
 
             if (!resumeData.summary) resumeData.summary = 'Results-driven Senior Test Analyst with 8+ years in automation and performance testing.';
             if (resumeData.skills.length === 0) resumeData.skills = ['Selenium', 'Java', 'JIRA', 'API Testing', 'Agile', 'Jenkins'];
@@ -472,24 +488,36 @@
 
         function generateResume() {
             if (!resumeData.raw) return;
-            const format = document.getElementById('formatSelect').value;
+
+            const format = parseInt(document.getElementById('formatSelect').value);
             const optimized = buildFullResume();
-            const template = getCleanTemplate(parseInt(format), optimized);
-            document.getElementById('generatedResume').innerHTML = template;
+            const template = getUniqueTemplate(format, optimized);
+            
+            const resumeDiv = document.getElementById('generatedResume');
+            resumeDiv.innerHTML = template;
+            resumeDiv.className = `format-resume format-${format}`; // Apply unique style
             document.getElementById('generatedSection').classList.remove('hidden');
         }
 
         function buildFullResume() {
-            let exp = resumeData.experience.slice(0, 12);
-            const missing = resumeData.keywords.missing;
+            // Start with original experience only
+            let exp = [...resumeData.originalExperience];
 
+            // Add missing keywords ONCE
+            const missing = resumeData.keywords.missing;
             missing.forEach(kw => {
                 const sentence = getKeywordSentence(kw);
-                if (sentence) exp.push(sentence);
+                if (sentence && !exp.some(e => e.includes(kw))) {
+                    exp.push(sentence);
+                }
             });
 
-            while (exp.length < 20) {
-                exp.push(getFillerBullet());
+            // Fill to 3+ pages (25+ bullets)
+            while (exp.length < 25) {
+                const filler = getFillerBullet();
+                if (!exp.includes(filler)) {
+                    exp.push(filler);
+                }
             }
 
             return {
@@ -518,14 +546,20 @@
                 '• Mentored junior testers on automation best practices, code reviews, and framework design patterns.',
                 '• Contributed to test strategy documents, risk assessment, and mitigation planning for high-visibility projects.',
                 '• Implemented data-driven testing framework supporting multiple test data sources including Excel, JSON, and databases.',
-                '• Integrated automated tests with SonarQube for code quality and test coverage analysis.'
+                '• Integrated automated tests with SonarQube for code quality and test coverage analysis.',
+                '• Conducted root cause analysis on production defects and implemented preventive measures.',
+                '• Designed and maintained reusable test automation libraries used across 10+ projects.',
+                '• Led UAT sessions with stakeholders to ensure business requirements were met.',
+                '• Optimized test execution time by 40% through parallel execution and resource management.',
+                '• Participated in code reviews and enforced coding standards in test automation.'
             ];
             return fillers[Math.floor(Math.random() * fillers.length)];
         }
 
-        function getCleanTemplate(format, data) {
-            const base = `
-                <div>
+        function getUniqueTemplate(format, data) {
+            const templates = [
+                // 0: Reverse Chronological
+                `<div>
                     <h2>Professional Summary</h2>
                     <p>${data.summary}</p>
                     <h2>Technical Skills</h2>
@@ -536,18 +570,59 @@
                     <ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul>
                     <h2>Education</h2>
                     <p>${data.education}</p>
-                    <div style="margin-top: 60pt;">
-                        <h2>Certifications</h2>
-                        <ul>
-                            <li>ISTQB Certified Tester – Advanced Level</li>
-                            <li>AWS Certified Solutions Architect – Associate</li>
-                            <li>Certified Scrum Master (CSM)</li>
-                        </ul>
-                    </div>
-                </div>`;
+                    <h2>Certifications</h2>
+                    <ul><li>ISTQB Certified Tester – Advanced Level</li><li>AWS Certified Solutions Architect – Associate</li><li>Certified Scrum Master (CSM)</li></ul>
+                </div>`,
 
-            const templates = Array(10).fill(base);
-            return templates[format] || base;
+                // 1: Functional
+                `<div>
+                    <h2>Core Competencies</h2>
+                    <ul>${data.skills.map(s => `<li><strong>${s}</strong></li>`).join('')}</ul>
+                    <h2>Professional Summary</h2>
+                    <p>${data.summary}</p>
+                    <h2>Key Achievements</h2>
+                    <ul>${data.experience.slice(0, 15).map(e => `<li>${e}</li>`).join('')}</ul>
+                </div>`,
+
+                // 2: Hybrid
+                `<div>
+                    <h2>Skills & Expertise</h2>
+                    <p>${data.skills.join(' • ')}</p>
+                    <h2>Professional Summary</h2>
+                    <p>${data.summary}</p>
+                    <h2>Experience</h2>
+                    <ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul>
+                </div>`,
+
+                // 3: Modern
+                `<div style="font-family: Arial, sans-serif;">
+                    <h2 style="color: #000;">Summary</h2>
+                    <p>${data.summary}</p>
+                    <h2 style="color: #000;">Skills</h2>
+                    <p>${data.skills.join(' | ')}</p>
+                    <h2 style="color: #000;">Experience</h2>
+                    <ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul>
+                </div>`,
+
+                // 4: Creative
+                `<div style="background: #f0f8ff; padding: 20px;">
+                    <h2 style="text-align: center;">PROFESSIONAL SUMMARY</h2>
+                    <p style="text-align: center;">${data.summary}</p>
+                    <h2 style="text-align: center;">SKILLS</h2>
+                    <p style="text-align: center; font-weight: bold;">${data.skills.join('  ◦  ')}</p>
+                    <h2 style="text-align: center;">EXPERIENCE</h2>
+                    <ul style="list-style: none;">${data.experience.map(e => `<li style="margin: 10px 0; padding: 10px; background: #fff; border-left: 5px solid #00d4ff;">${e}</li>`).join('')}</ul>
+                </div>`,
+
+                // 5–9: Other unique layouts
+                `<div><h2>ACADEMIC CV</h2><p>${data.summary}</p><ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul></div>`,
+                `<div><h2>EXECUTIVE SUMMARY</h2><p>${data.summary}</p><h2>EXPERIENCE</h2><ul>${data.experience.slice(0, 10).map(e => `<li>${e}</li>`).join('')}</ul></div>`,
+                `<div><h2>TECHNICAL SKILLS</h2><pre>${data.skills.join('\n')}</pre><h2>EXPERIENCE</h2><ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul></div>`,
+                `<div><h2 style="font-size: 18pt;">IMPACT SUMMARY</h2><p style="font-size: 14pt;">${data.summary}</p><ul style="font-size: 12pt;">${data.experience.map(e => `<li>${e}</li>`).join('')}</ul></div>`,
+                `<div><h2>FEDERAL RESUME</h2><p><strong>Grade:</strong> GS-12 | <strong>Clearance:</strong> Secret</p><p>${data.summary}</p><ul>${data.experience.map(e => `<li>${e}</li>`).join('')}</ul></div>`
+            ];
+
+            return templates[format] || templates[0];
         }
 
         function saveAsPdf() {
@@ -576,7 +651,7 @@
             document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
             resumeData = {
                 raw: '', cleaned: '', summary: '', experience: [], skills: [], education: '',
-                jobKeywords: [], score: 0, keywords: { found: [], missing: [] }
+                jobKeywords: [], score: 0, keywords: { found: [], missing: [] }, originalExperience: []
             };
             showToast('All cleared!', 'success');
         }
