@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mopuri ATS-Optimized Resume Builder Pro</title>
-    <meta name="description" content="Free ATS-friendly resume generator with 10 formats, grammar check, keyword optimization, and job-landing tips.">
+    <title>Mopuri ATS Resume Builder Pro</title>
+    <meta name="description" content="Free ATS-optimized resume generator with 10 formats, grammar check, keyword optimization, and job-landing tips.">
     
     <!-- Libraries -->
     <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -15,10 +15,10 @@
 
     <style>
         :root {
-            --bg: #0f0f0f;
+            --bg: #0a0a0a;
+            --card: #1a1a1a;
             --text: #e0e0e0;
             --accent: #00d4ff;
-            --card: #1a1a1a;
             --border: #333;
             --success: #00ff88;
             --warning: #ffcc00;
@@ -40,98 +40,114 @@
         header {
             text-align: center;
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 25px;
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,212,255,0.1);
+            border-radius: 16px;
+            box-shadow: 0 6px 25px rgba(0,212,255,0.15);
+            border: 1px solid var(--border);
         }
 
         h1 { 
-            font-size: 2.5rem; 
+            font-size: 2.8rem; 
             background: linear-gradient(90deg, #00d4ff, #ff00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-weight: 800;
         }
 
         .upload-area {
             border: 3px dashed var(--accent);
-            border-radius: 12px;
-            padding: 30px;
+            border-radius: 16px;
+            padding: 35px;
             text-align: center;
-            margin: 20px 0;
-            transition: all 0.3s;
+            margin: 25px 0;
+            transition: all 0.3s ease;
             background: var(--card);
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--success);
+            background: rgba(0,255,136,0.05);
+            transform: translateY(-2px);
         }
 
         .upload-area.dragover {
-            background: rgba(0,212,255,0.1);
+            background: rgba(0,212,255,0.15);
             border-color: var(--success);
+            transform: scale(1.02);
         }
 
         .upload-area label {
             display: block;
-            padding: 15px;
+            padding: 18px;
             background: var(--accent);
             color: #000;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             transition: 0.3s;
+            font-size: 1.1rem;
         }
 
         .upload-area label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
+            background: #00ff88;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,212,255,0.5);
         }
 
         input[type="file"] { display: none; }
 
         textarea {
             width: 100%;
-            height: 200px;
+            height: 220px;
             background: #111;
             color: var(--text);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: monospace;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
             font-size: 14px;
+            resize: vertical;
         }
 
         .section {
             background: var(--card);
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 16px;
             border: 1px solid var(--border);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .section h2 {
             color: var(--accent);
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
         }
 
         button {
             background: var(--accent);
             color: #000;
             border: none;
-            padding: 12px 20px;
-            margin: 5px;
-            border-radius: 8px;
+            padding: 14px 24px;
+            margin: 8px 5px;
+            border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s;
-            font-size: 14px;
+            transition: all 0.3s;
+            font-size: 15px;
+            min-width: 140px;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,212,255,0.5);
+            background: #00ff88;
         }
 
         button.secondary {
@@ -148,30 +164,34 @@
             background: #111;
             color: var(--text);
             border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 5px;
-            min-width: 200px;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 8px 5px;
+            min-width: 250px;
+            font-size: 14px;
         }
 
         .format-resume {
             background: white;
             color: black;
-            padding: 30px;
-            margin: 20px 0;
-            border-radius: 8px;
-            min-height: 800px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            padding: 40px;
+            margin: 25px 0;
+            border-radius: 12px;
+            min-height: 900px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
             font-family: 'Times New Roman', serif;
+            line-height: 1.5;
+            font-size: 11pt;
         }
 
         .ats-score {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 20px;
+            border-radius: 16px;
             text-align: center;
-            margin: 15px 0;
+            margin: 20px 0;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         .ats-90 { background: #00ff88; color: #000; }
@@ -183,10 +203,10 @@
             display: inline-block;
             background: var(--accent);
             color: #000;
-            padding: 5px 10px;
-            margin: 3px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 8px 14px;
+            margin: 5px;
+            border-radius: 25px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -197,82 +217,110 @@
 
         .tip-box {
             background: rgba(0,212,255,0.1);
-            border-left: 4px solid var(--accent);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
+            border-left: 5px solid var(--accent);
+            padding: 18px;
+            margin: 18px 0;
+            border-radius: 0 12px 12px 0;
+            font-size: 15px;
         }
 
         .examples-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 18px;
+            margin: 25px 0;
         }
 
         .example-card {
             background: var(--card);
-            padding: 15px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
             border: 1px solid var(--border);
+            text-align: center;
         }
 
         .example-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,212,255,0.2);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,212,255,0.3);
             border-color: var(--accent);
         }
 
         .example-card h4 {
             color: var(--accent);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
         }
 
         .progress-bar {
-            height: 8px;
+            height: 10px;
             background: #333;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 12px 0;
         }
 
         .progress-fill {
             height: 100%;
             background: var(--success);
             width: 0%;
-            transition: width 0.5s;
+            transition: width 0.6s ease;
         }
 
         .hidden { display: none; }
 
-        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .flex { 
+            display: flex; 
+            gap: 12px; 
+            flex-wrap: wrap; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.4s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
 
         @media (max-width: 768px) {
-            h1 { font-size: 1.8rem; }
+            h1 { font-size: 2rem; }
             .flex { flex-direction: column; }
+            .examples-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>ATS Resume Builder Pro</h1>
-            <p>10 Professional Formats • ATS Optimized • Grammar Check • Job-Landing Tips</p>
+            <h1>Mopuri ATS Resume Builder Pro</h1>
+            <p>10 ATS-Friendly Formats • Auto-Optimization • Grammar & Keyword Check • Job-Ready in Minutes</p>
         </header>
 
         <!-- Upload Section -->
         <div class="section">
             <h2>Upload or Paste Your Resume</h2>
             <div class="upload-area" id="uploadArea">
-                <label for="resumeFile">Choose File or Drag & Drop (.docx, .pdf, .txt)</label>
-                <input type="file" id="resumeFile" accept=".docx,.pdf,.txt">
-                <p style="margin-top:10px; color:#888;">OR paste below:</p>
+                <label for="resumeFile">Choose File or Drag & Drop (.docx, .txt, .pdf)</label>
+                <input type="file" id="resumeFile" accept=".docx,.txt,.pdf">
+                <p style="margin-top:12px; color:#888; font-size:14px;">Supports: DOCX, TXT, PDF (text-based only)</p>
             </div>
             <textarea id="resumeText" placeholder="Paste your resume content here..."></textarea>
             <div class="flex">
-                <button onclick="processResume()">Analyze & Optimize Resume</button>
+                <button onclick="processResume()">Analyze & Optimize</button>
                 <button class="secondary" onclick="clearAll()">Clear All</button>
             </div>
         </div>
@@ -280,37 +328,38 @@
         <!-- Resume Examples -->
         <div class="section">
             <h2>Professional Resume Examples (3-4 Pages Each)</h2>
-            <p>Click any example to load a complete, ATS-optimized resume:</p>
+            <p>Click to load a complete, ATS-optimized resume:</p>
             <div class="examples-grid">
+                <!-- Senior Software Test Analyst Examples -->
                 <div class="example-card" onclick="loadExample(0)">
-                    <h4>Software Engineer</h4>
-                    <p>Senior Full-Stack Developer • 5+ Years</p>
-                    <div class="progress-bar"><div class="progress-fill" style="width:95%"></div></div>
-                    <small>ATS Score: 95%</small>
+                    <h4>Sr. Test Analyst - Automation</h4>
+                    <p>Selenium • Appium • Java • CI/CD</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:96%"></div></div>
+                    <small>ATS Score: 96%</small>
                 </div>
                 <div class="example-card" onclick="loadExample(1)">
-                    <h4>Product Manager</h4>
-                    <p>Agile • SaaS • B2B • 7+ Years</p>
-                    <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
-                    <small>ATS Score: 92%</small>
+                    <h4>Sr. Test Analyst - Performance</h4>
+                    <p>JMeter • LoadRunner • AWS • Monitoring</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
+                    <small>ATS Score: 94%</small>
                 </div>
                 <div class="example-card" onclick="loadExample(2)">
-                    <h4>Data Scientist</h4>
-                    <p>Python • ML • AWS • PhD</p>
+                    <h4>Sr. Test Analyst - API & Security</h4>
+                    <p>Postman • OWASP • REST • SOAP</p>
                     <div class="progress-bar"><div class="progress-fill" style="width:97%"></div></div>
                     <small>ATS Score: 97%</small>
                 </div>
                 <div class="example-card" onclick="loadExample(3)">
-                    <h4>Marketing Director</h4>
-                    <p>SEO • Growth • $10M Budget</p>
-                    <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
-                    <small>ATS Score: 90%</small>
+                    <h4>Sr. Test Analyst - Agile & DevOps</h4>
+                    <p>Jira • Jenkins • Docker • Kubernetes</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:93%"></div></div>
+                    <small>ATS Score: 93%</small>
                 </div>
                 <div class="example-card" onclick="loadExample(4)">
-                    <h4>UX Designer</h4>
-                    <p>Figma • User Research • A/B Testing</p>
-                    <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
-                    <small>ATS Score: 94%</small>
+                    <h4>Sr. Test Analyst - AI/ML Testing</h4>
+                    <p>TensorFlow • Python • Data Validation</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:95%"></div></div>
+                    <small>ATS Score: 95%</small>
                 </div>
             </div>
         </div>
@@ -327,7 +376,7 @@
             <h2>Select Resume Format</h2>
             <div class="flex">
                 <select id="formatSelect">
-                    <option value="0">1. Reverse Chronological (Most Popular)</option>
+                    <option value="0">1. Reverse Chronological (Most ATS-Friendly)</option>
                     <option value="1">2. Functional (Skills-Focused)</option>
                     <option value="2">3. Combination (Hybrid)</option>
                     <option value="3">4. Modern Minimalist</option>
@@ -344,7 +393,7 @@
 
         <!-- Generated Resume -->
         <div class="section" id="generatedSection" class="hidden">
-            <h2>Generated Resume (ATS Optimized)</h2>
+            <h2>Mopuri Generated Resume (ATS Optimized)</h2>
             <div id="generatedResume" class="format-resume"></div>
             <div class="flex">
                 <button onclick="saveAsPdf()">Download PDF</button>
@@ -355,15 +404,15 @@
 
         <!-- Job Tips -->
         <div class="section">
-            <h2>Job Landing Tips</h2>
+            <h2>Job Landing Tips for Test Analysts</h2>
             <div class="tip-box">
-                <strong>Quantify Achievements:</strong> Use numbers — "Increased revenue by 40%" beats "Improved sales"
+                <strong>Use Metrics:</strong> "Reduced defects by 68%" > "Improved quality"
             </div>
             <div class="tip-box">
-                <strong>Tailor for Each Job:</strong> Match 70% of job description keywords
+                <strong>Highlight Tools:</strong> Selenium, JIRA, Postman, JMeter, Appium, TestRail
             </div>
             <div class="tip-box">
-                <strong>Action Verbs:</strong> Start bullets with Led, Developed, Optimized, Achieved
+                <strong>Agile & CI/CD:</strong> Mention daily standups, sprint testing, Jenkins pipelines
             </div>
         </div>
     </div>
@@ -373,115 +422,10 @@
         let currentResume = {
             text: '',
             sections: {},
-            keywords: [],
+            keywords: { found: [], missing: [] },
             score: 0
         };
 
+        // ATS Keywords for Test Analyst
         const ATS_KEYWORDS = {
-            technical: ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'SQL', 'Git', 'Agile', 'CI/CD', 'REST API', 'Microservices', 'TypeScript', 'Kubernetes', 'Terraform'],
-            soft: ['Leadership', 'Communication', 'Collaboration', 'Problem-solving', 'Project Management', 'Stakeholder Management', 'Strategic Planning'],
-            action: ['Led', 'Developed', 'Implemented', 'Optimized', 'Increased', 'Reduced', 'Managed', 'Designed', 'Executed', 'Achieved', 'Improved', 'Delivered', 'Transformed', 'Automated', 'Streamlined']
-        };
-
-        const RESUME_EXAMPLES = [
-            // 0: Software Engineer (4 pages)
-            `JOHN DOE
-Senior Full-Stack Software Engineer
-Seattle, WA | (555) 123-4567 | john.doe@email.com | linkedin.com/in/johndoe | github.com/johndoe
-
-PROFESSIONAL SUMMARY
-Results-driven Senior Full-Stack Engineer with 7+ years of experience building scalable web applications. Expert in React, Node.js, and AWS. Led teams to deliver 15+ production systems serving 5M+ users. Reduced infrastructure costs by 45% through optimization.
-
-TECHNICAL SKILLS
-Languages: JavaScript (ES6+), TypeScript, Python, Java, SQL
-Frontend: React, Redux, Next.js, HTML5, CSS3, Tailwind CSS
-Backend: Node.js, Express, NestJS, Django, Spring Boot
-Databases: PostgreSQL, MySQL, MongoDB, Redis
-Cloud: AWS (EC2, S3, Lambda, RDS, CloudFront), Docker, Kubernetes
-Tools: Git, Jenkins, Terraform, Datadog, Jira
-
-PROFESSIONAL EXPERIENCE
-Amazon Web Services (AWS), Seattle, WA
-Senior Software Engineer
-June 2021 – Present
-• Led migration of legacy monolith to microservices architecture using Node.js and AWS Lambda, reducing latency by 60%
-• Designed and implemented real-time analytics dashboard using React and WebSocket, serving 500K daily active users
-• Mentored 5 junior engineers and established code review standards, improving team velocity by 30%
-• Optimized CI/CD pipeline with Jenkins and Terraform, reducing deployment time from 45min to 8min
-• Implemented security best practices including OAuth2, JWT, and rate limiting
-
-Microsoft, Redmond, WA
-Software Engineer II
-March 2018 – May 2021
-• Developed internal tooling platform using React and Python, adopted by 200+ engineers
-• Reduced API response time by 70% through query optimization and caching strategies
-• Built automated testing framework with Jest and Cypress, achieving 95% code coverage
-• Collaborated with product teams to define API contracts and improve developer experience
-
-StartupXYZ, San Francisco, CA
-Junior Software Engineer
-July 2016 – February 2018
-• Built MVP for SaaS product using MERN stack, launched to 10K users in 3 months
-• Implemented payment processing with Stripe and subscription management
-• Created responsive UI components with 99% accessibility compliance
-
-EDUCATION
-University of Washington, Seattle, WA
-Bachelor of Science in Computer Science
-Graduated: June 2016, GPA: 3.8/4.0
-Relevant Coursework: Algorithms, Data Structures, Operating Systems, Distributed Systems
-
-CERTIFICATIONS
-• AWS Certified Solutions Architect – Professional (2023)
-• Google Cloud Professional Cloud Developer (2022)
-• Certified Scrum Master (CSM) (2021)
-
-PROJECTS
-Open Source Contributor
-• React Query – 500+ stars on GitHub
-• Node.js Performance Toolkit – Featured in Node Weekly
-
-LANGUAGES
-English (Native), Spanish (Conversational)`,
-
-            // 1: Product Manager
-            `SARAH CHEN
-Product Manager | SaaS & B2B Expert
-San Francisco, CA | (555) 987-6543 | sarah.chen@email.com | linkedin.com/in/sarahchen
-
-EXECUTIVE SUMMARY
-Strategic Product Manager with 8+ years leading SaaS products from ideation to $10M+ ARR. Expert in Agile methodologies, customer development, and cross-functional leadership. Grew user base 300% and reduced churn by 65% through data-driven decisions.
-
-CORE COMPETENCIES
-• Product Strategy & Roadmap Planning
-• Agile/Scrum Master (CSM, CSPO)
-• Customer Discovery & Validation
-• SQL, Amplitude, Mixpanel Analytics
-• A/B Testing & Experiment Design
-• Stakeholder Management
-• Go-to-Market Strategy
-• Pricing & Packaging
-
-PROFESSIONAL EXPERIENCE
-Salesforce, San Francisco, CA
-Senior Product Manager
-January 2022 – Present
-• Own Einstein Analytics product line generating $25M ARR
-• Led cross-functional team of 12 (eng, design, data) to launch AI-powered insights feature
-• Increased adoption 180% through targeted onboarding and in-app guidance
-• Reduced churn 45% by implementing predictive churn model
-• Drove pricing strategy resulting in 28% revenue uplift
-
-Google, Mountain View, CA
-Product Manager
-June 2018 – December 2021
-• Managed Google Workspace add-ons marketplace
-• Grew developer ecosystem from 50 to 500+ partners
-• Launched certification program improving app quality by 70%
-• Partnered with sales to close enterprise deals worth $15M+
-
-Startup Inc, Palo Alto, CA
-Associate Product Manager
-May 2016 – May 2018
-• Built MVP for collaboration tool in 3 months
-• Achieved product-market
+            technical: ['Selenium', 'Appium', 'JMeter', 'Load
