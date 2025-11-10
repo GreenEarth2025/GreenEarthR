@@ -133,6 +133,11 @@
             color: var(--text);
         }
 
+        button.danger {
+            background: var(--error);
+            color: white;
+        }
+
         select {
             background: #111;
             color: var(--text);
@@ -161,7 +166,7 @@
         }
 
         .format-resume .name-title {
-            font-size: 18pt; /* Reduced from 28pt */
+            font-size: 18pt;
             margin-bottom: 8pt;
             color: #1a1a1a;
             font-weight: bold;
@@ -296,7 +301,7 @@
             <h2>Paste Job Description</h2>
             <textarea id="jobDescText" placeholder="Paste the full job description here. We'll extract keywords and tailor your resume..."></textarea>
             <div class="flex">
-                <button onclick="processResume()">Analyze & Optimize</button>
+                <button id="analyzeBtn" onclick="processResume()">Analyze & Optimize</button>
                 <button class="secondary" onclick="clearAll()">Clear All</button>
             </div>
         </div>
@@ -354,6 +359,7 @@
     </div>
 
     <script>
+        // FIXED: Syntax error in object key
         let resumeData = {
             raw: '',
             cleaned: '',
@@ -363,7 +369,7 @@
             experience: [],
             skills: [],
             education: '',
-            jobKeywords:: [],
+            jobKeywords: [],
             score: 0,
             keywords: { found: [], missing: [] }
         };
@@ -494,6 +500,15 @@
             results.innerHTML = html;
         }
 
+        function regenerateResume() {
+            if (!resumeData.raw) {
+                showToast('No resume to regenerate! Paste first.', 'error');
+                return;
+            }
+            generateResume();
+            showToast('Resume regenerated!', 'success');
+        }
+
         function generateResume() {
             if (!resumeData.raw) return;
             const format = document.getElementById('formatSelect').value;
@@ -602,7 +617,10 @@
             document.getElementById('resumeText').value = '';
             document.getElementById('jobDescText').value = '';
             document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
-            resumeData = { raw: '', cleaned: '', name: '', contact: '', summary: '', experience: [], skills: [], education: '', jobKeywords: [], score: 0, keywords: { found: [], missing: [] } };
+            resumeData = {
+                raw: '', cleaned: '', name: '', contact: '', summary: '', experience: [], skills: [], education: '',
+                jobKeywords: [], score: 0, keywords: { found: [], missing: [] }
+            };
             showToast('All cleared!', 'success');
         }
 
